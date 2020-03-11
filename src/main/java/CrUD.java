@@ -1,4 +1,3 @@
-import ancillary.UnknownCommand;
 import utils.CrUDUtils;
 
 import java.io.*;
@@ -30,9 +29,9 @@ public class CrUD {
         try {
             CrUDUtils.loadProps();
             fileName = CrUDUtils.getFileName();
-            System.out.println("Run with \"-use\" if you don't know how to use!");
+            System.out.println("Run with \"-use\" if you don't know how it's work!");
         } catch (FileNotFoundException ex) {
-            System.out.println(">>> Properties file not found! <<<");
+            System.out.println(">>> Properties files not found! <<<");
         } catch (IOException ex) {
             System.out.println(">>> Problems with data transition! <<<");
         }
@@ -43,27 +42,30 @@ public class CrUD {
             switch (args[0]) {
                 case "-use" :
                     try {
-                        if (args.length != 1) {
-                            throw new UnknownCommand();
-                        } else System.out.println("Easy to use!!!" +
-                                "Run with \"-stgs\" if ");
-                    } catch (UnknownCommand e) {
-                        System.out.println(e.getMessage());
+                        if (args.length != 1) throw new IndexOutOfBoundsException(">>> Unknown command <<<");
+                        else CrUDUtils.getInstruction();
+                    } catch (IndexOutOfBoundsException ex) {
+                        System.out.println(ex.getMessage());
+                    } catch (IOException ex) {
+                        System.out.println(">>> Unknown exception <<<");
                     }
                     break;
                 case "-stgs" :
                     try {
-                        if (args.length == 1) System.out.println("Options: \n" +
-                                "-stgs info - get files list with creators and status \n" +
-                                "-stgs ch - changing the user" +
-                                "-stgs cr - create a new data file \n" +
-                                "-stgs d - delete data file \n" +
-                                "-stgs add - adding *.crud files \n" +
+                        if (args.length == 1) System.out.println("Options: "                     + '\n' +
+                                "-stgs info  - get files list with creators, statuses and paths" + '\n' +
+                                "-stgs user  - changing the user"                                + '\n' +
+                                "-stgs cr    - create a new data file"                           + '\n' +
+                                "-stgs d     - delete data file"                                 + '\n' +
+                                "-stgs add   - adding *.crud files"                              + '\n' +
                                 "-stgs reset - for use the \"DEFAULT MODE\"");
                         else if (args.length == 2)
                             switch (args[1]) {
                                 case "info" :
                                     CrUDUtils.getInfo();
+                                    break;
+                                case "user" :
+                                    CrUDUtils.user();
                                     break;
                                 case "cr" :
                                     CrUDUtils.createNewFile();
@@ -78,9 +80,9 @@ public class CrUD {
                                     CrUDUtils.reset();
                                     break;
                             }
-                        else throw new UnknownCommand();
-                    } catch (UnknownCommand e) {
-                        System.out.println(e.getMessage());
+                        else throw new IndexOutOfBoundsException(">>> Unknown command <<<");
+                    } catch (IndexOutOfBoundsException ex) {
+                        System.out.println(ex.getMessage());
                     }
                     break;
                 case "-cr":
