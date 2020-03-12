@@ -1,3 +1,4 @@
+import ancillary.*;
 import utils.CrUDUtils;
 
 import java.io.*;
@@ -38,7 +39,7 @@ public class CrUD {
     }
 
     public static void main(String[] args) throws IOException {
-        if (args.length > 0)
+         if (args.length > 0)
             switch (args[0]) {
                 case "-use" :
                     try {
@@ -52,12 +53,12 @@ public class CrUD {
                     break;
                 case "-stgs" :
                     try {
-                        if (args.length == 1) System.out.println("Options: "                     + '\n' +
-                                "-stgs info  - get files list with creators, statuses and paths" + '\n' +
-                                "-stgs user  - changing the user"                                + '\n' +
-                                "-stgs cr    - create a new data file"                           + '\n' +
-                                "-stgs d     - delete data file"                                 + '\n' +
-                                "-stgs add   - adding *.crud files"                              + '\n' +
+                        if (args.length == 1) System.out.println("Options: "              + '\n' +
+                                "-stgs info  - get files list with creators and statuses" + '\n' +
+                                "-stgs user  - changing the user"                         + '\n' +
+                                "-stgs cr    - create a new data file"                    + '\n' +
+                                "-stgs d     - delete data file"                          + '\n' +
+                                "-stgs add   - adding *.crud files"                       + '\n' +
                                 "-stgs reset - for use the \"DEFAULT MODE\"");
                         else if (args.length == 2)
                             switch (args[1]) {
@@ -99,22 +100,18 @@ public class CrUD {
     }
 
     private static void create(String[] args) throws IOException {
-        try (BufferedReader bufferedReader =
-                     new BufferedReader(new InputStreamReader(
-                             new FileInputStream(fileName), StandardCharsets.UTF_8));
-             BufferedWriter bufferedWriter =
-                     new BufferedWriter(new OutputStreamWriter(
-                             new FileOutputStream(fileName, true), StandardCharsets.UTF_8))) {
+        try (CrUDReader reader = new CrUDReaderAdapter(fileName);
+             CrUDWriter writer = new CrUDWriterAdapter(fileName, true)) {
 
             String line;
             int lastId = 0;
-            while ((line = bufferedReader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 int id = (!line.substring(0, 8).contains(" ")) ?
                         Integer.parseInt(line.substring(0, 8)) :
                         Integer.parseInt(line.substring(0, line.indexOf(" ")));
                 if (id > lastId) lastId = id;
             }
-            bufferedReader.close();
+            reader.close();
 
             if (lastId < 100000000) lastId++;
 
@@ -127,21 +124,18 @@ public class CrUD {
 
             int quantityInt = Integer.parseInt(args[args.length - 1]);
 
-            bufferedWriter.newLine();
-            bufferedWriter.write(String.format("%-8d%-30.30s%-8.2f%-4d", lastId, sb, priceDouble, quantityInt).
+            writer.newLine();
+            writer.write(String.format("%-8d%-30.30s%-8.2f%-4d", lastId, sb, priceDouble, quantityInt).
                     replace(',', '.'));
         }
     }
 
     private static void update(String[] args) throws IOException {
         LinkedList<String> buffList = new LinkedList<>();
-        try (BufferedReader bufferedReader =
-                     new BufferedReader(new InputStreamReader(new FileInputStream(fileName), StandardCharsets.UTF_8))) {
+        try (CrUDReader reader = new CrUDReaderAdapter(fileName)) {
             String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                buffList.add(line);
-            }
-            bufferedReader.close();
+            while ((line = reader.readLine()) != null) buffList.add(line);
+            reader.close();
 
             for (int i = 0; i < buffList.size(); i++) {
                 if (buffList.get(i).substring(0, 8).trim().equals(args[1])) {
@@ -155,13 +149,12 @@ public class CrUD {
                 }
             }
         }
-        try (BufferedWriter bufferedWriter =
-                     new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8))) {
+        try (CrUDWriter writer = new CrUDWriterAdapter(fileName)) {
             for (int i = 0; i < buffList.size(); i++) {
-                if (i == buffList.size() - 1) bufferedWriter.write(buffList.get(i));
+                if (i == buffList.size() - 1) writer.write(buffList.get(i));
                 else {
-                    bufferedWriter.write(buffList.get(i));
-                    bufferedWriter.newLine();
+                    writer.write(buffList.get(i));
+                    writer.newLine();
                 }
             }
         }
@@ -169,22 +162,17 @@ public class CrUD {
 
     private static void delete(String[] args) throws IOException {
         LinkedList<String> buffList = new LinkedList<>();
-        try (BufferedReader bufferedReader =
-                     new BufferedReader(new InputStreamReader(new FileInputStream(fileName), StandardCharsets.UTF_8))) {
+        try (CrUDReader reader = new CrUDReaderAdapter(fileName)) {
             String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                buffList.add(line);
-            }
-
+            while ((line = reader.readLine()) != null) buffList.add(line);
             buffList.removeIf(s -> s.substring(0, 8).trim().equals(args[1]));
         }
-        try (BufferedWriter bufferedWriter =
-                     new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName), StandardCharsets.UTF_8))) {
+        try (CrUDWriter writer = new CrUDWriterAdapter(fileName)) {
             for (int i = 0; i < buffList.size(); i++) {
-                if (i == buffList.size() - 1) bufferedWriter.write(buffList.get(i));
+                if (i == buffList.size() - 1) writer.write(buffList.get(i));
                 else {
-                    bufferedWriter.write(buffList.get(i));
-                    bufferedWriter.newLine();
+                    writer.write(buffList.get(i));
+                    writer.newLine();
                 }
             }
         }

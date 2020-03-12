@@ -1,15 +1,16 @@
 package utils;
 
+import ancillary.*;
+
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.nio.file.FileAlreadyExistsException;
+import java.util.LinkedList;
 import java.util.Properties;
 
 public class CrUDUtils {
 
     private static final String defaultProps = "src/main/props/default.properties";
-    private static final String userProps = "src/main/props/user.properties";
+    //private static final String userProps = "src/main/props/user.properties";
     //private static final String propsPath = "src/main/props/";
     //private static final Properties DEFAULT_PROPS = new Properties();
     private static final Properties PROPS = new Properties();
@@ -28,12 +29,10 @@ public class CrUDUtils {
     }
 
     public static void getInfo() throws IOException {
-        try (BufferedReader br =
-                     new BufferedReader(new InputStreamReader(
-                             new FileInputStream(PROPS.getProperty("DATA_FILE")), StandardCharsets.UTF_8))) {
+        try (CrUDReader reader = new CrUDReaderAdapter(PROPS.getProperty("INFO_LIST"))) {
             String line;
-            for (int i = 1; (line = br.readLine()) != null; i++) {
-                System.out.println(i + " " + line);
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
             }
         }
     }
@@ -44,33 +43,27 @@ public class CrUDUtils {
     }
 
     public static void createNewFile() throws IOException {
-        try (BufferedReader br =
-                     new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-            /*System.out.print("Change the directory? (N - recommended) [Y/N]: ");
-            if (br.readLine().equalsIgnoreCase("Y")) {
-                System.out.println("Enter the directory would you like:");
-                fileDir = br.readLine();
-            } else if (br.readLine().equalsIgnoreCase("N"))
-                fileDir = PROPS.getProperty("DATA_DIR");*/
+        try (CrUDReader reader = new CrUDReaderAdapter(System.in)) {
+            System.out.print("Enter file name (name only & 10 characters max): ");
+            String fileName = reader.readLine();
+            if (fileName.isEmpty() || fileName.length() > 10)
+                throw new IndexOutOfBoundsException(">>> Enter the creating file name 10 characters max <<<");
+            addToInfoList(fileName);
+            String filePath = PROPS.getProperty("DATA_DIR") + '/' + fileName + ".crud";
+            reader.close();
 
-            System.out.print("Enter file name (name only): ");
-            String filePath = PROPS.getProperty("DATA_DIR") + '/' + br.readLine() + ".crud";
-            br.close();
-
-            try (BufferedWriter bw =
-                         new BufferedWriter(new OutputStreamWriter(
-                                 new FileOutputStream(filePath), StandardCharsets.UTF_8))) {
-                bw.write("ID      Product name                  Price   Quan");
+            try (CrUDWriter writer = new CrUDWriterAdapter(filePath)) {
+                writer.write(String.format("%-8.8s%-30.30s%-8.8sf%-4.4s", "ID", "Product", "Price", "Quantity"));
             }
         }
     }
 
     public static void deleteFile() throws IOException {
         getInfo();
-        try (BufferedReader br =
-                     new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))) {
-            System.out.print("Choose the file (enter number): ");
-            int chosenNumber = Integer.parseInt(br.readLine());
+
+        try (CrUDReader reader = new CrUDReaderAdapter(System.in)) {
+            System.out.print("Choose the file (enter numberX): ");
+            int chosenNumber = Integer.parseInt(reader.readLine());
             //br.close();
             // to be continue...
         }
@@ -85,11 +78,9 @@ public class CrUDUtils {
     }
 
     public static void getInstruction() throws IOException {
-        try (BufferedReader br =
-                new BufferedReader(new InputStreamReader(
-                        new FileInputStream(PROPS.getProperty("INST")), StandardCharsets.UTF_8))) {
+        try (CrUDReader reader = new CrUDReaderAdapter(PROPS.getProperty("INST"))) {
             String line;
-            while ((line = br.readLine()) != null)
+            while ((line = reader.readLine()) != null)
                 System.out.println(line);
         }
     }
@@ -98,7 +89,31 @@ public class CrUDUtils {
         return PROPS.getProperty("FILE_NAME");
     }
 
-    private void addToInfoList() {
+    private static void addToInfoList(String fileName) throws IOException {
+        LinkedList<String> buffList = new LinkedList<>();
+        try (CrUDReader reader = new CrUDReaderAdapter(PROPS.getProperty("INFO_LIST"));
+             CrUDWriter writer = new CrUDWriterAdapter(PROPS.getProperty("INFO_LIST"), true)) {
+            int newID = 1;
+            String line;
+            if ((line = reader.readLine()) == null) {
+                writer.write(String.
+                        format("|%-8d|%-15.15s|%-20.20s|%-9.9s|",
+                                newID, PROPS.getProperty("DATA_FILE"), PROPS.getProperty("USER_NAME"), "work file"));
+            } else {
+                buffList.add(line);
+                while ((line = reader.readLine()) != null) buffList.add(line);
+                reader.close();
 
+                for (String s : buffList) {
+                    if (s.contains(fileName + ".crud")) {
+                        buffList.clear();
+                        throw new FileAlreadyExistsException(">>> \"" + fileName + ".crud\" file already exists! Try again. <<<");
+                    }
+                }
+
+                writer.newLine();
+                writer.write(String.format("%-8d"));
+            }
+        }
     }
 }
