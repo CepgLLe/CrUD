@@ -100,8 +100,8 @@ public class CrUD {
     }
 
     private static void create(String[] args) throws IOException {
-        try (CrUDReader reader = new CrUDReaderAdapter(fileName);
-             CrUDWriter writer = new CrUDWriterAdapter(fileName, true)) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(fileName);
+             CrUDBufferedWriter writer = new CrUDBufferedWriter(fileName, true)) {
 
             String line;
             int lastId = 0;
@@ -132,7 +132,7 @@ public class CrUD {
 
     private static void update(String[] args) throws IOException {
         LinkedList<String> buffList = new LinkedList<>();
-        try (CrUDReader reader = new CrUDReaderAdapter(fileName)) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(fileName)) {
             String line;
             while ((line = reader.readLine()) != null) buffList.add(line);
             reader.close();
@@ -149,7 +149,7 @@ public class CrUD {
                 }
             }
         }
-        try (CrUDWriter writer = new CrUDWriterAdapter(fileName)) {
+        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(fileName)) {
             for (int i = 0; i < buffList.size(); i++) {
                 if (i == buffList.size() - 1) writer.write(buffList.get(i));
                 else {
@@ -162,12 +162,12 @@ public class CrUD {
 
     private static void delete(String[] args) throws IOException {
         LinkedList<String> buffList = new LinkedList<>();
-        try (CrUDReader reader = new CrUDReaderAdapter(fileName)) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(fileName)) {
             String line;
             while ((line = reader.readLine()) != null) buffList.add(line);
             buffList.removeIf(s -> s.substring(0, 8).trim().equals(args[1]));
         }
-        try (CrUDWriter writer = new CrUDWriterAdapter(fileName)) {
+        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(fileName)) {
             for (int i = 0; i < buffList.size(); i++) {
                 if (i == buffList.size() - 1) writer.write(buffList.get(i));
                 else {

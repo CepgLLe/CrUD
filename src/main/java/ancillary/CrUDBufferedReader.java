@@ -3,26 +3,24 @@ package ancillary;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-public class CrUDReaderAdapter implements CrUDReader {
+public class CrUDBufferedReader extends BufferedReader {
 
     private BufferedReader br;
 
-    public CrUDReaderAdapter(String name) throws IOException {
+    public CrUDBufferedReader(String name) throws IOException {
+        super(new InputStreamReader(new FileInputStream(name), StandardCharsets.UTF_8));
         this.br = new BufferedReader(new InputStreamReader(new FileInputStream(name), StandardCharsets.UTF_8));
     }
 
-    public CrUDReaderAdapter(InputStream in) {
+    public CrUDBufferedReader(InputStream in) {
+        super(new InputStreamReader(in, StandardCharsets.UTF_8));
         this.br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
     }
 
-    @Override
     public String readLine() throws IOException {
-        String line;
-        if ((line = br.readLine()) != null) return line;
-        return null;
+        return br.readLine();
     }
 
-    @Override
     public void close() throws IOException {
         br.close();
     }
