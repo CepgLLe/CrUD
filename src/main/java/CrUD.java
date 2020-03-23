@@ -2,7 +2,6 @@ import ancillary.*;
 import utils.CrUDUtils;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Locale;
 
@@ -24,12 +23,12 @@ import java.util.Locale;
  */
 public class CrUD {
 
-    private static String fileName;
+    private static String workFilePath;
 
     static {
         try {
             CrUDUtils.loadProps();
-            fileName = CrUDUtils.getFileName();
+            workFilePath = CrUDUtils.getWorkFile();
             System.out.println("Run with \"-use\" if you don't know how it's work!");
         } catch (FileNotFoundException ex) {
             System.out.println(">>> Properties files not found! <<<");
@@ -38,7 +37,7 @@ public class CrUD {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) /*throws IOException*/ {
          if (args.length > 0)
             switch (args[0]) {
                 case "-use" :
@@ -69,7 +68,7 @@ public class CrUD {
                                     CrUDUtils.user();
                                     break;
                                 case "cr" :
-                                    CrUDUtils.createNewFile();
+                                    CrUDUtils.createNewDataFile();
                                     break;
                                 case "d" :
                                     CrUDUtils.deleteFile();
@@ -82,26 +81,40 @@ public class CrUD {
                                     break;
                             }
                         else throw new IndexOutOfBoundsException(">>> Unknown command <<<");
-                    } catch (IndexOutOfBoundsException ex) {
-                        System.out.println(ex.getMessage());
+                    } catch (IOException ex) {
+                        String message = ex.getMessage();
+                        if (message.equals("exit")) return;
+                        else System.out.println(message);
                     }
                     break;
                 case "-cr":
-                    create(args);
+                    try {
+                        create(args);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 case "-u":
-                    update(args);
+                    try {
+                        update(args);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 case "-d":
-                    delete(args);
+                    try {
+                        delete(args);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     break;
             }
         else System.out.println("Welcome! The program by Dmitrii Charuiskii");
     }
 
     private static void create(String[] args) throws IOException {
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(fileName);
-             CrUDBufferedWriter writer = new CrUDBufferedWriter(fileName, true)) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(workFilePath);
+             CrUDBufferedWriter writer = new CrUDBufferedWriter(workFilePath, true)) {
 
             String line;
             int lastId = 0;
@@ -132,7 +145,7 @@ public class CrUD {
 
     private static void update(String[] args) throws IOException {
         LinkedList<String> buffList = new LinkedList<>();
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(fileName)) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(workFilePath)) {
             String line;
             while ((line = reader.readLine()) != null) buffList.add(line);
             reader.close();
@@ -149,7 +162,7 @@ public class CrUD {
                 }
             }
         }
-        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(fileName)) {
+        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(workFilePath)) {
             for (int i = 0; i < buffList.size(); i++) {
                 if (i == buffList.size() - 1) writer.write(buffList.get(i));
                 else {
@@ -162,12 +175,12 @@ public class CrUD {
 
     private static void delete(String[] args) throws IOException {
         LinkedList<String> buffList = new LinkedList<>();
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(fileName)) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(workFilePath)) {
             String line;
             while ((line = reader.readLine()) != null) buffList.add(line);
             buffList.removeIf(s -> s.substring(0, 8).trim().equals(args[1]));
         }
-        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(fileName)) {
+        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(workFilePath)) {
             for (int i = 0; i < buffList.size(); i++) {
                 if (i == buffList.size() - 1) writer.write(buffList.get(i));
                 else {
