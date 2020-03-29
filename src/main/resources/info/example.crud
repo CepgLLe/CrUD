@@ -1,6 +1,6 @@
-ID      Product name                  Price   Quan
-1       Product 1                     150.00  15
-2       Product 2                     2000.00 3
-3       Product 3                     39.99   1500
-...     ...                           ...     ...
-99999999Product for example to look lo999999999999
+|ID      |Product name                  |Price   |Quan|
+|1       |Product 1                     |150.00  |15  |
+|2       |Product 2                     |2000.00 |3   |
+|3       |Product 3                     |39.99   |1500|
+|...     |...                           |...     |... |
+|99999999|Product for example to look lo|99999999|9999|

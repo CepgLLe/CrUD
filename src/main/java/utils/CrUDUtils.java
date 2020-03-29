@@ -1,6 +1,6 @@
 package utils;
 
-import ancillary.*;
+import services.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -10,17 +10,16 @@ import java.util.Properties;
 
 public class CrUDUtils {
 
-    private static final String defaultProps = "src/main/props/props/default.properties";
+    private static final String userDir = System.getProperty("user.dir").replace('\\','/') + '/';
+    private static final String defaultProps = /*userDir + */"src/main/props/props/default.properties"; // DON'T FORGET!!!
     private static final Properties PROPS = new Properties();
     private static boolean isGot;
 
-
     public static void loadProps() throws IOException {
         isGot = false;
-        //DEFAULT_PROPS.load(new FileInputStream(propsPath + defaultFilename));
         PROPS.load(new FileInputStream(defaultProps));
         if (PROPS.getProperty("MODE").equals("USER")) {
-            File userPropsFile = new File(PROPS.getProperty("USER_PROPS_FILE"));
+            File userPropsFile = new File(/*userDir + */PROPS.getProperty("USER_PROPS_FILE"));
             PROPS.clear();
             PROPS.load(new FileInputStream(userPropsFile));
         }
@@ -33,45 +32,75 @@ public class CrUDUtils {
     }
 
     public static void getInfo() throws IOException {
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(PROPS.getProperty("INFO_LIST"))) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
             String line;
             while ((line = reader.readLine()) != null) System.out.println(line);
         }
     }
 
-    public static void user() {
-        System.out.println("User menu...");
-        // body...
+    public static void changeWorkFile() throws IOException {
+        getInfo();
+
+        int chosenNumber;
+        try (CrUDBufferedReader consoleReader = new CrUDBufferedReader(System.in)) {
+
+            System.out.print("Choose the file (enter ID or \"0\" for cancel): ");
+            chosenNumber = Integer.parseInt(consoleReader.readLine());
+
+            if (chosenNumber == 0) return;
+
+            if (PROPS.getProperty("MODE").equals("DEFAULT"))
+                changeDefaultMode(); // Changes the DEFAULT MODE to USER MODE.
+            setPropsAndSave("USER_NAME", getData(consoleReader, "Enter your name (or \"exit\" to exit)"));
+
+            String workFileName = null;
+            try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    int fileNumber = 0;
+                    if (!line.equals("|ID      |File Name      |Last changes by     |Status   |"))
+                        fileNumber = Integer.parseInt(line.substring(1, line.indexOf('|', 1)).trim());
+                    if (fileNumber == chosenNumber) {
+                        int index = line.indexOf('|', 1) + 1;
+                        workFileName = line.substring(index, line.indexOf('|', index)).trim();
+                    }
+                }
+            }
+            if (workFileName != null)
+                setPropsAndSave("DATA_FILE", workFileName);
+        } catch (NumberFormatException e) {
+            changeWorkFile();
+        }
     }
 
     public static void createNewDataFile() throws IOException {
         try (CrUDBufferedReader reader = new CrUDBufferedReader(System.in)) {
-            // Changes the DEFAULT MODE to USER MODE with changes
-            if (PROPS.getProperty("MODE").equals("DEFAULT")) {
-                changeDefaultMode();
-            }
-            //
-            setPropsAndSave("USER_NAME", getData(reader, "Enter your name (or \"exit\" to exit)"));
-
             String fileName = getData(reader, "Enter file name (name only & 10 characters max)") + ".crud";
+            String absolutePath = PROPS.getProperty("DATA_DIR") + fileName;
 
             if (fileName.equals(".crud") || fileName.length() > 10)
                 throw new IndexOutOfBoundsException(">>> Enter the creating file name 10 characters max <<<");
 
-            create(reader, fileName);
+            // Changes the DEFAULT MODE to USER MODE with changes
+            if (PROPS.getProperty("MODE").equals("DEFAULT"))
+                changeDefaultMode();
+            setPropsAndSave("USER_NAME", getData(reader, "Enter your name (or \"exit\" to exit)"));
+
+            create(reader, absolutePath);
             reader.close();
 
-            try (CrUDBufferedWriter writer = new CrUDBufferedWriter(PROPS.getProperty("DATA_DIR") + fileName)) {
-                writer.write(String.format("%-8.8s%-30.30s%-8.8sf%-4.4s", "ID", "Product", "Price", "Quantity"));
+            try (CrUDBufferedWriter writer = new CrUDBufferedWriter(absolutePath)) {
+                writer.write(String.format("|%-8.8s|%-30.30s|%-8.8s|%-4.4s|", "ID", "Product", "Price", "Quantity"));
             }
 
             setPropsAndSave("DATA_FILE", fileName);
         }
     }
 
-    private static void create(CrUDBufferedReader reader, String fileName) throws IOException {
-        if (!isTrue(reader, "Confirm \"" + fileName + "\" file creation?")) {
-            File file = new File(PROPS.getProperty("DATA_DIR") + fileName);
+    private static void create(CrUDBufferedReader reader, String absolutePath) throws IOException {
+        String fileName = absolutePath.substring(absolutePath.lastIndexOf('/') + 1);
+        if (isTrue(reader, "Confirm \"" + fileName + "\" file creation?")) {
+            File file = new File(absolutePath);
             if (file.createNewFile()) {
                 System.out.println(fileName + " created!");
                 addToInfoList(fileName);
@@ -85,13 +114,6 @@ public class CrUDUtils {
         ArrayList<String> buffList = new ArrayList<>();
         int chosenNumber;
         try (CrUDBufferedReader consoleReader = new CrUDBufferedReader(System.in)) {
-            if (PROPS.getProperty("MODE").equals("DEFAULT")) {
-                changeDefaultMode(); // Changes the DEFAULT MODE to USER MODE.
-            }
-            //
-            setPropsAndSave("USER_NAME", getData(consoleReader, "Enter your name (or \"exit\" to exit)"));
-
-            // ...
 
             System.out.print("Choose the file (enter ID or \"0\" for cancel): ");
             chosenNumber = Integer.parseInt(consoleReader.readLine());
@@ -99,7 +121,11 @@ public class CrUDUtils {
             if (chosenNumber == 0) return;
             else if (chosenNumber == 1) throw new InvalidObjectException(">>> Undeletable file <<<");
 
-            try (CrUDBufferedReader reader = new CrUDBufferedReader(PROPS.getProperty("INFO_LIST"))) {
+            if (PROPS.getProperty("MODE").equals("DEFAULT"))
+                changeDefaultMode(); // Changes the DEFAULT MODE to USER MODE.
+            setPropsAndSave("USER_NAME", getData(consoleReader, "Enter your name (or \"exit\" to exit)"));
+
+            try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (!line.contains("ID") && !line.contains("Status")) buffList.add(line);
@@ -115,7 +141,6 @@ public class CrUDUtils {
                 } else throw new IOException(">>> File have the \"deleted\" status <<<");
             }
         }
-
     }
 
     private static void delete(String fileName, CrUDBufferedReader reader) throws IOException {
@@ -124,7 +149,7 @@ public class CrUDUtils {
             String line = reader.readLine();
             if (line.equalsIgnoreCase("N")) break;
             else if (line.equalsIgnoreCase("Y")) {
-                File file = new File(PROPS.getProperty("DATA_DIR") + fileName);
+                File file = new File(/*userDir + */PROPS.getProperty("DATA_DIR") + fileName);
                 if (file.delete()) {
                     System.out.println(fileName + " deleted!");
                     changeFileStatus(fileName, "deleted");
@@ -134,16 +159,14 @@ public class CrUDUtils {
         }
     }
 
-    public static void addFile() {
-        // ...
-    }
-
-    public static void reset() {
-        // ...
-    }
-
     public static void getInstruction() throws IOException {
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(PROPS.getProperty("INST"))) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INST"))) {
+            String line;
+            while ((line = reader.readLine()) != null)
+                System.out.println(line);
+        }
+        System.out.println("-----------EXAMPLE-----------");
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("EXAMPLE"))) {
             String line;
             while ((line = reader.readLine()) != null)
                 System.out.println(line);
@@ -151,18 +174,17 @@ public class CrUDUtils {
     }
 
     public static String getWorkFile() {
-        return PROPS.getProperty("DATA_DIR") + PROPS.getProperty("DATA_FILE");
+        return /*userDir + */PROPS.getProperty("DATA_DIR") + PROPS.getProperty("DATA_FILE");
     }
 
     private static void addToInfoList(String fileName) throws IOException {
         ArrayList<String> buffList = new ArrayList<>();
         int id = 1;
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(PROPS.getProperty("INFO_LIST"))) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
             String line;
-
-            while ((line = reader.readLine()) != null) {
-                if (!line.contains("ID") && !line.contains("Status")) buffList.add(line);
-            }
+            while ((line = reader.readLine()) != null)
+                if (!line.contains("ID") && !line.contains("Status"))
+                    buffList.add(line);
         }
 
         // Checking a file name with same name.
@@ -177,16 +199,16 @@ public class CrUDUtils {
             if (newID > id) id = newID;
         }
 
-        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(PROPS.getProperty("INFO_LIST"), true)) {
+        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(/*userDir + */PROPS.getProperty("INFO_LIST"), true)) {
             writer.newLine();
-            writer.write(String.
-                    format("|%-8d|%-15.15s|%-20.20s|%-9.9s|",
+            writer.write(String
+                    .format("|%-8d|%-15.15s|%-20.20s|%-9.9s|",
                             ++id, fileName, PROPS.getProperty("USER_NAME"), "created"));
         }
     }
 
     /**
-     * The method changes a file status in the "Status" column of the <a href="src/main/data/info_list">
+     * The method changes a file status in the "Status" column of the <a href="/data/info_list">
      * and user name in the "Last changes by" column.
      *
      * @param fileName is a file name with *.crud format which a status need to change
@@ -195,7 +217,7 @@ public class CrUDUtils {
      */
     private static void changeFileStatus(String fileName, String status) throws IOException {
         ArrayList<String> buffList = new ArrayList<>();
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(PROPS.getProperty("INFO_LIST"))) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
             String line;
             while ((line = reader.readLine()) != null) buffList.add(line);
         }
@@ -213,7 +235,7 @@ public class CrUDUtils {
             }
         }
 
-        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(PROPS.getProperty("INFO_LIST"))) {
+        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
             for (int i = 0; i < buffList.size(); i++) {
                 if (i == buffList.size() - 1) writer.write(buffList.get(i));
                 else {
@@ -222,7 +244,6 @@ public class CrUDUtils {
                 }
             }
         }
-
         System.out.println("Status changed.");
     }
 
@@ -250,7 +271,8 @@ public class CrUDUtils {
         PROPS.put(key, value);
         PROPS.store(new BufferedWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(PROPS.getProperty("USER_PROPS_FILE")), StandardCharsets.UTF_8)), null);
+                        new FileOutputStream(/*userDir +*/
+                                PROPS.getProperty("USER_PROPS_FILE")), StandardCharsets.UTF_8)), null);
     }
 
     // This method changes the DEFAULT MODE to USER MODE. It will change only if the MODE was DEFAULT

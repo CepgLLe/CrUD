@@ -1,4 +1,4 @@
-import ancillary.*;
+import services.*;
 import utils.CrUDUtils;
 
 import java.io.*;
@@ -8,7 +8,7 @@ import java.util.Locale;
 /**
  * <title> CrUD </title>
  * <b>CrUD</b> is a program for Create-Update-Delete goods. The CrUD is create file like a table
- * with four columns but without separating lines.
+ * with four columns.
  * <h3>Columns:</h3>
  * <ul>
  *     <li>ID number - from 1 to 99999999 (8 character column)</li>
@@ -19,6 +19,7 @@ import java.util.Locale;
  * You can work with default file, create new data files, delete data file and
  * use another *.crud files.
  *
+ *
  * @author Dmitrii Charuskii
  */
 public class CrUD {
@@ -28,8 +29,8 @@ public class CrUD {
     static {
         try {
             CrUDUtils.loadProps();
-            workFilePath = CrUDUtils.getWorkFile();
             System.out.println("Run with \"-use\" if you don't know how it's work!");
+            System.out.println("Welcome! The program by Dmitrii Charuiskii");
         } catch (FileNotFoundException ex) {
             System.out.println(">>> Properties files not found! <<<");
         } catch (IOException ex) {
@@ -37,79 +38,81 @@ public class CrUD {
         }
     }
 
-    public static void main(String[] args) /*throws IOException*/ {
-         if (args.length > 0)
-            switch (args[0]) {
-                case "-use" :
-                    try {
-                        if (args.length != 1) throw new IndexOutOfBoundsException(">>> Unknown command <<<");
-                        else CrUDUtils.getInstruction();
-                    } catch (IndexOutOfBoundsException ex) {
-                        System.out.println(ex.getMessage());
-                    } catch (IOException ex) {
-                        System.out.println(">>> Unknown exception <<<");
-                    }
-                    break;
-                case "-stgs" :
-                    try {
-                        if (args.length == 1) System.out.println("Options: "              + '\n' +
-                                "-stgs info  - get files list with creators and statuses" + '\n' +
-                                "-stgs user  - changing the user"                         + '\n' +
-                                "-stgs cr    - create a new data file"                    + '\n' +
-                                "-stgs d     - delete data file"                          + '\n' +
-                                "-stgs add   - adding *.crud files"                       + '\n' +
-                                "-stgs reset - for use the \"DEFAULT MODE\"");
-                        else if (args.length == 2)
-                            switch (args[1]) {
-                                case "info" :
-                                    CrUDUtils.getInfo();
-                                    break;
-                                case "user" :
-                                    CrUDUtils.user();
-                                    break;
-                                case "cr" :
-                                    CrUDUtils.createNewDataFile();
-                                    break;
-                                case "d" :
-                                    CrUDUtils.deleteFile();
-                                    break;
-                                case "add" :
-                                    CrUDUtils.addFile();
-                                    break;
-                                case "reset" :
-                                    CrUDUtils.reset();
-                                    break;
-                            }
-                        else throw new IndexOutOfBoundsException(">>> Unknown command <<<");
-                    } catch (IOException ex) {
-                        String message = ex.getMessage();
-                        if (message.equals("exit")) return;
-                        else System.out.println(message);
-                    }
-                    break;
-                case "-cr":
-                    try {
-                        create(args);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case "-u":
-                    try {
-                        update(args);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-                case "-d":
-                    try {
-                        delete(args);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
-            }
-        else System.out.println("Welcome! The program by Dmitrii Charuiskii");
+    public static void main(String[] args) {
+         if (args.length > 0) {
+             workFilePath = CrUDUtils.getWorkFile();
+             switch (args[0]) {
+                 case "-use":
+                     try {
+                         if (args.length != 1) throw new IndexOutOfBoundsException(">>> Unknown command <<<");
+                         else CrUDUtils.getInstruction();
+                     } catch (IndexOutOfBoundsException ex) {
+                         System.err.println(ex.getMessage());
+                     } catch (IOException ex) {
+                         System.err.println(">>> Unknown exception <<<");
+                     }
+                     break;
+                 case "-stgs":
+                     try {
+                         if (args.length == 1) System.out.println("Options: " + '\n' +
+                                 "-stgs info - get files list with creators and statuses" + '\n' +
+                                 "-stgs ch   - change the work file" + '\n' +
+                                 "-stgs cr   - create a new data file" + '\n' +
+                                 "-stgs d    - delete data file");
+                         else if (args.length == 2)
+                             switch (args[1]) {
+                                 case "info":
+                                     CrUDUtils.getInfo();
+                                     break;
+                                 case "ch":
+                                     CrUDUtils.changeWorkFile();
+                                     break;
+                                 case "cr":
+                                     CrUDUtils.createNewDataFile();
+                                     break;
+                                 case "d":
+                                     CrUDUtils.deleteFile();
+                                     break;
+                             }
+                         else throw new IndexOutOfBoundsException(">>> Unknown command <<<");
+                     } catch (IOException ex) {
+                         String message = ex.getMessage();
+                         if (message.equals("exit")) return;
+                         else System.err.println(message);
+                     }
+                     break;
+                 case "-cr":
+                     try {
+                         create(args);
+                     } catch (IOException e) {
+                         System.err.println(">>> Error while create! <<< " + e.getMessage());
+                     }
+                     break;
+                 case "-u":
+                     try {
+                         update(args);
+                     } catch (IOException e) {
+                         System.err.println(">>> Error while update! <<< " + e.getMessage());
+                     }
+                     break;
+                 case "-d":
+                     try {
+                         delete(args);
+                     } catch (IOException e) {
+                         System.err.println(">>> Error while delete! <<< " + e.getMessage());
+                     }
+                     break;
+                 case "-print":
+                     try (CrUDBufferedReader reader = new CrUDBufferedReader(workFilePath)) {
+                         String line;
+                         while ((line = reader.readLine()) != null)
+                             System.out.println(line);
+                     } catch (IOException e) {
+                         System.err.println(">>> Error while print! <<< " + e.getMessage());
+                     }
+                     break;
+             }
+         }
     }
 
     private static void create(String[] args) throws IOException {
@@ -119,9 +122,9 @@ public class CrUD {
             String line;
             int lastId = 0;
             while ((line = reader.readLine()) != null) {
-                int id = (!line.substring(0, 8).contains(" ")) ?
-                        Integer.parseInt(line.substring(0, 8)) :
-                        Integer.parseInt(line.substring(0, line.indexOf(" ")));
+                int id = 0;
+                if (!line.equals("|ID      |Product name                  |Price   |Quan|"))
+                    id = Integer.parseInt(line.substring(1, line.indexOf('|', 1)).trim());
                 if (id > lastId) lastId = id;
             }
             reader.close();
@@ -138,8 +141,8 @@ public class CrUD {
             int quantityInt = Integer.parseInt(args[args.length - 1]);
 
             writer.newLine();
-            writer.write(String.format("%-8d%-30.30s%-8.2f%-4d", lastId, sb, priceDouble, quantityInt).
-                    replace(',', '.'));
+            writer.write(String
+                    .format(Locale.ROOT,"|%-8d|%-30.30s|%-8.2f|%-4d|", lastId, sb, priceDouble, quantityInt));
         }
     }
 
@@ -151,14 +154,17 @@ public class CrUD {
             reader.close();
 
             for (int i = 0; i < buffList.size(); i++) {
-                if (buffList.get(i).substring(0, 8).trim().equals(args[1])) {
+                String buff = buffList.get(i)
+                        .substring(1, buffList.get(i).indexOf('|', 1))
+                        .trim();
+                if (buff.equals(args[1])) {
                     StringBuilder sb = new StringBuilder();
                     for (int j = 2; j < args.length - 2; j++) {
                         sb.append(args[j]).append(' ');
                     }
-                    buffList.set(i, String.
-                            format(Locale.ROOT, buffList.get(i).substring(0, 8) + "%-30.30s%-8.2f%-4d",
-                                    sb, Double.parseDouble(args[args.length - 2]), Integer.parseInt(args[args.length - 1])));
+                    buffList.set(i, String
+                            .format(Locale.ROOT, "|%-8.8s|%-30.30s|%-8.2f|%-4d|",
+                                    buff, sb, Double.parseDouble(args[args.length - 2]), Integer.parseInt(args[args.length - 1])));
                 }
             }
         }
@@ -178,8 +184,14 @@ public class CrUD {
         try (CrUDBufferedReader reader = new CrUDBufferedReader(workFilePath)) {
             String line;
             while ((line = reader.readLine()) != null) buffList.add(line);
-            buffList.removeIf(s -> s.substring(0, 8).trim().equals(args[1]));
+            buffList.removeIf(s -> s.substring(1, s.indexOf('|', 1)).trim().equals(args[1]));
         }
+
+        for (int i = 1; i < buffList.size(); i++) {
+            String get = buffList.get(i).substring(buffList.get(i).indexOf('|', 1));
+            buffList.set(i, String.format("|%-8d%s", i, get));
+        }
+
         try (CrUDBufferedWriter writer = new CrUDBufferedWriter(workFilePath)) {
             for (int i = 0; i < buffList.size(); i++) {
                 if (i == buffList.size() - 1) writer.write(buffList.get(i));
