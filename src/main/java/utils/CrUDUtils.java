@@ -15,6 +15,10 @@ public class CrUDUtils {
     private static final Properties PROPS = new Properties();
     private static boolean isGot;
 
+    /**
+     * The method loads default properties first time and user properties if a mode changed.
+     * @throws IOException if an error occurred.
+     */
     public static void loadProps() throws IOException {
         isGot = false;
         PROPS.load(new FileInputStream(defaultProps));
@@ -31,6 +35,10 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * The method prints the information list.
+     * @throws IOException if an error occurred.
+     */
     public static void getInfo() throws IOException {
         try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
             String line;
@@ -38,6 +46,10 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * The method selects a file for work.
+     * @throws IOException if an error occurred.
+     */
     public static void changeWorkFile() throws IOException {
         getInfo();
 
@@ -73,6 +85,12 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * The method creates a new data file and sets file name. In process the user must to enter his name for
+     * identification as the last user. Additionally, It carry out different procedures as: changes the DEFAULT
+     * MODE to USER MODE, save the user name and file name to properties and creates a header in the file.
+     * @throws IOException if an error occurred.
+     */
     public static void createNewDataFile() throws IOException {
         try (CrUDBufferedReader reader = new CrUDBufferedReader(System.in)) {
             String fileName = getData(reader, "Enter file name (name only & 10 characters max)") + ".crud";
@@ -97,6 +115,12 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * The method creates the file on the disk an call the {@code addToInfoList} method.
+     * @param reader is a console reader;
+     * @param absolutePath is an absolute path of creatable file.
+     * @throws IOException if an error occurred.
+     */
     private static void create(CrUDBufferedReader reader, String absolutePath) throws IOException {
         String fileName = absolutePath.substring(absolutePath.lastIndexOf('/') + 1);
         if (isTrue(reader, "Confirm \"" + fileName + "\" file creation?")) {
@@ -108,6 +132,10 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * The method delete a chosen data file.
+     * @throws IOException if an error occurred.
+     */
     public static void deleteFile() throws IOException {
         getInfo();
 
@@ -143,6 +171,12 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * The method delete the data file from disk. The same request for cancel.
+     * @param fileName is a data file;
+     * @param reader is a console reader.
+     * @throws IOException if an error occurred.
+     */
     private static void delete(String fileName, CrUDBufferedReader reader) throws IOException {
         System.out.print("Are you sure? [Y/N]: ");
         while (true) {
@@ -159,6 +193,10 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * The method print a small instruction and example.
+     * @throws IOException if an error occurred.
+     */
     public static void getInstruction() throws IOException {
         try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INST"))) {
             String line;
@@ -173,10 +211,18 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * @return the path of selected file for work.
+     */
     public static String getWorkFile() {
         return /*userDir + */PROPS.getProperty("DATA_DIR") + PROPS.getProperty("DATA_FILE");
     }
 
+    /**
+     * The method add a new data file to info list with a status.
+     * @param fileName is a created file name.
+     * @throws IOException if an error occurred.
+     */
     private static void addToInfoList(String fileName) throws IOException {
         ArrayList<String> buffList = new ArrayList<>();
         int id = 1;
@@ -203,7 +249,7 @@ public class CrUDUtils {
             writer.newLine();
             writer.write(String
                     .format("|%-8d|%-15.15s|%-20.20s|%-9.9s|",
-                            ++id, fileName, PROPS.getProperty("USER_NAME"), "created"));
+                            ++id, fileName, PROPS.getProperty("USER_NAME"), "work file"));
         }
     }
 
@@ -247,6 +293,14 @@ public class CrUDUtils {
         System.out.println("Status changed.");
     }
 
+    /**
+     * The service method.
+     * @param reader is a console reader;
+     * @param question is a text of question in form (for example):
+     *                 Are you sure?  [Y/N]: - if you set: {@code isTrue(reader, "Are you sure?");}.
+     * @return true if answer is Y/y or false if answer is N/n.
+     * @throws IOException if an error occurred.
+     */
     private static boolean isTrue(CrUDBufferedReader reader, String question) throws IOException {
         String answer;
         while (true) {
@@ -257,6 +311,14 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * The service method.
+     * @param reader is a console reader;
+     * @param message is a text of request in form (for example):
+     *                Enter user name: - if you set: {@code getData(reader, "Enter user name");}.
+     * @return entered data.
+     * @throws IOException if an I/O error occurs or input the "exit".
+     */
     private static String getData(CrUDBufferedReader reader, String message) throws IOException {
         String data;
         while (true) {
@@ -267,6 +329,12 @@ public class CrUDUtils {
         }
     }
 
+    /**
+     * The method sets and save properties to file.
+     * @param key is a props key;
+     * @param value is a new value.
+     * @throws IOException if an error occurred.
+     */
     private static void setPropsAndSave(String key, String value) throws IOException {
         PROPS.put(key, value);
         PROPS.store(new BufferedWriter(
@@ -275,7 +343,10 @@ public class CrUDUtils {
                                 PROPS.getProperty("USER_PROPS_FILE")), StandardCharsets.UTF_8)), null);
     }
 
-    // This method changes the DEFAULT MODE to USER MODE. It will change only if the MODE was DEFAULT
+    /**
+     * The method changes the default mode to user mode.
+     * @throws IOException if an error occurred.
+     */
     private static void changeDefaultMode() throws IOException {
         PROPS.put("MODE", "USER");
         PROPS.store(new BufferedWriter(
