@@ -19,7 +19,6 @@ import java.util.Locale;
  * You can work with default file, create new data files, delete data file and
  * use another *.crud files.
  *
- *
  * @author Dmitrii Charuskii
  */
 public class CrUD {
