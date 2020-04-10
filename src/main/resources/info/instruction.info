@@ -1,8 +1,8 @@
-Easy to use!!!
-Run with "-stgs" if you need to get settings information.
-Run with "-cr" and arguments to add a new product.
-(for example: -cr name of product 150 15)
-Run with "-u" and arguments to update one of product.
-(for example: -u 3 new name of third product 320.5 100)
-Run with "-d" and id of product that you want to delete.
-(for example: -d 15)
+[INFO] Easy to use!!!
+[INFO] Run with "-stgs" if you need to get settings information.
+[INFO] Run with "-cr" and arguments to add a new product.
+       (for example: -cr name of product 150 15)
+[INFO] Run with "-u" and arguments to update one of product.
+       (for example: -u 3 new name of third product 320.5 100)
+[INFO] Run with "-d" and id of product that you want to delete.
+       (for example: -d 15)

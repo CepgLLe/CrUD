@@ -1,13 +1,16 @@
-import services.*;
-import utils.CrUDUtils;
+package com.CepgLLe.example;
+
+import com.CepgLLe.example.services.*;
+import com.CepgLLe.example.tools.CrUDUtils;
+import com.CepgLLe.example.tools.Extract;
 
 import java.io.*;
 import java.util.LinkedList;
 import java.util.Locale;
 
 /**
- * <title> CrUD </title>
- * <b>CrUD</b> is a program for Create-Update-Delete goods. The CrUD is create file like a table
+ * <title> com.CepgLLe.example.CrUD </title>
+ * <b>com.CepgLLe.example.CrUD</b> is a program for Create-Update-Delete goods. The com.CepgLLe.example.CrUD is create file like a table
  * with four columns.
  * <h3>Columns:</h3>
  * <ul>
@@ -27,19 +30,20 @@ public class CrUD {
 
     static {
         try {
-            CrUDUtils.loadProps();
-            System.out.println("Run with \"-use\" if you don't know how it's work!");
-            System.out.println("Welcome! The program by Dmitrii Charuiskii");
-        } catch (FileNotFoundException ex) {
-            System.out.println(">>> Properties files not found! <<<");
-        } catch (IOException ex) {
-            System.out.println(">>> Problems with data transition! <<<");
+            Extract extract = new Extract();
+            if (!extract.extracted())
+                extract.extract();
+//            CrUDUtils.loadProps();
+            System.out.println("[INFO] Run with \"-use\" if you don't know how it's work!");
+            System.out.println("[INFO] Welcome! The program by Dmitrii Charuiskii");
+        } catch (Exception ex) {
+            System.err.println("[ERROR] Error while start! Message: " + ex.getMessage());
         }
     }
 
     public static void main(String[] args) {
          if (args.length > 0) {
-             workFilePath = CrUDUtils.getWorkFile();
+//             workFilePath = CrUDUtils.getWorkFile();
              switch (args[0]) {
                  case "-use":
                      try {
@@ -122,7 +126,8 @@ public class CrUD {
             int lastId = 0;
             while ((line = reader.readLine()) != null) {
                 int id = 0;
-                if (!line.equals("|ID      |Product name                  |Price   |Quan|"))
+                if (!line.equals("|ID      |Product name                  |Price   |Quan|") &&
+                    !line.equals("+--------+------------------------------+--------+----+"))
                     id = Integer.parseInt(line.substring(1, line.indexOf('|', 1)).trim());
                 if (id > lastId) lastId = id;
             }

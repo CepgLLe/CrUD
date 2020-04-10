@@ -1,17 +1,17 @@
-package utils;
+package com.CepgLLe.example.tools;
 
-import services.*;
+import com.CepgLLe.example.services.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Properties;
 
 public class CrUDUtils {
 
-    private static final String userDir = System.getProperty("user.dir").replace('\\','/') + '/';
-    private static final String defaultProps = /*userDir + */"src/main/props/props/default.properties"; // DON'T FORGET!!!
+    private static final String DEFAULT_PROPS = "props/default.properties";
     private static final Properties PROPS = new Properties();
     private static boolean isGot;
 
@@ -20,19 +20,26 @@ public class CrUDUtils {
      * @throws IOException if an error occurred.
      */
     public static void loadProps() throws IOException {
-        isGot = false;
-        PROPS.load(new FileInputStream(defaultProps));
+        /*isGot = false;
+        PROPS.load(
+                Objects.requireNonNull(CrUDUtils.class
+                                                .getClassLoader()
+                                                .getResourceAsStream(DEFAULT_PROPS))
+        );
         if (PROPS.getProperty("MODE").equals("USER")) {
-            File userPropsFile = new File(/*userDir + */PROPS.getProperty("USER_PROPS_FILE"));
             PROPS.clear();
-            PROPS.load(new FileInputStream(userPropsFile));
+            PROPS.load(
+                    Objects.requireNonNull(CrUDUtils.class
+                                                    .getClassLoader()
+                                                    .getResourceAsStream("props/user.properties"))
+            );
         }
         if (!isGot) {
             System.out.println("MODE: " + PROPS.getProperty("MODE") + ", " +
                     "LAST USER: " + PROPS.getProperty("USER_NAME")  + ", " +
                     "SELECTED FILE: " + PROPS.getProperty("DATA_FILE"));
             isGot = true;
-        }
+        }*/
     }
 
     /**
@@ -40,7 +47,11 @@ public class CrUDUtils {
      * @throws IOException if an error occurred.
      */
     public static void getInfo() throws IOException {
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(Objects
+                .requireNonNull(CrUDUtils.class
+                                         .getClassLoader()
+                                         .getResource(PROPS.getProperty("INFO_LIST")))
+                                         .getFile())) {
             String line;
             while ((line = reader.readLine()) != null) System.out.println(line);
         }
@@ -66,11 +77,18 @@ public class CrUDUtils {
             setPropsAndSave("USER_NAME", getData(consoleReader, "Enter your name (or \"exit\" to exit)"));
 
             String workFileName = null;
-            try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
+            try (CrUDBufferedReader reader =
+                         new CrUDBufferedReader(Objects
+                                 .requireNonNull(CrUDUtils.class
+                                                          .getClassLoader()
+                                                          .getResource(PROPS.getProperty("INFO_LIST")))
+                                                          .getFile())
+            ) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     int fileNumber = 0;
-                    if (!line.equals("|ID      |File Name      |Last changes by     |Status   |"))
+                    if (!line.equals("|ID      |File Name      |Last changes by     |Status   |") &&
+                        !line.equals("+--------+---------------+--------------------+---------+"))
                         fileNumber = Integer.parseInt(line.substring(1, line.indexOf('|', 1)).trim());
                     if (fileNumber == chosenNumber) {
                         int index = line.indexOf('|', 1) + 1;
@@ -109,6 +127,8 @@ public class CrUDUtils {
 
             try (CrUDBufferedWriter writer = new CrUDBufferedWriter(absolutePath)) {
                 writer.write(String.format("|%-8.8s|%-30.30s|%-8.8s|%-4.4s|", "ID", "Product", "Price", "Quantity"));
+                writer.newLine();
+                writer.write("+--------+------------------------------+--------+----+");
             }
 
             setPropsAndSave("DATA_FILE", fileName);
@@ -153,7 +173,12 @@ public class CrUDUtils {
                 changeDefaultMode(); // Changes the DEFAULT MODE to USER MODE.
             setPropsAndSave("USER_NAME", getData(consoleReader, "Enter your name (or \"exit\" to exit)"));
 
-            try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
+            try (CrUDBufferedReader reader = new CrUDBufferedReader(
+                    Objects.requireNonNull(CrUDUtils.class
+                                                    .getClassLoader()
+                                                    .getResource(PROPS.getProperty("INFO_LIST")))
+                                                    .getFile()
+            )) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (!line.contains("ID") && !line.contains("Status")) buffList.add(line);
@@ -183,7 +208,12 @@ public class CrUDUtils {
             String line = reader.readLine();
             if (line.equalsIgnoreCase("N")) break;
             else if (line.equalsIgnoreCase("Y")) {
-                File file = new File(/*userDir + */PROPS.getProperty("DATA_DIR") + fileName);
+                File file = new File(
+                        Objects.requireNonNull(CrUDUtils.class
+                                                        .getClassLoader()
+                                                        .getResource(PROPS.getProperty("DATA_DIR") + fileName))
+                                                        .getFile()
+                );
                 if (file.delete()) {
                     System.out.println(fileName + " deleted!");
                     changeFileStatus(fileName, "deleted");
@@ -198,13 +228,23 @@ public class CrUDUtils {
      * @throws IOException if an error occurred.
      */
     public static void getInstruction() throws IOException {
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INST"))) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(
+                Objects.requireNonNull(CrUDUtils.class
+                                                .getClassLoader()
+                                                .getResource(PROPS.getProperty("INST")))
+                                                .getFile()
+        )) {
             String line;
             while ((line = reader.readLine()) != null)
                 System.out.println(line);
         }
-        System.out.println("-----------EXAMPLE-----------");
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("EXAMPLE"))) {
+        System.out.println("+-----------------------EXAMPLE-----------------------+");
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(
+                Objects.requireNonNull(CrUDUtils.class
+                                                .getClassLoader()
+                                                .getResource(PROPS.getProperty("EXAMPLE")))
+                                                .getFile()
+        )) {
             String line;
             while ((line = reader.readLine()) != null)
                 System.out.println(line);
@@ -215,7 +255,11 @@ public class CrUDUtils {
      * @return the path of selected file for work.
      */
     public static String getWorkFile() {
-        return /*userDir + */PROPS.getProperty("DATA_DIR") + PROPS.getProperty("DATA_FILE");
+        return Objects.requireNonNull(CrUDUtils
+                .class
+                .getClassLoader()
+                .getResource(PROPS.getProperty("DATA_DIR") + PROPS.getProperty("DATA_FILE")))
+                .getFile();
     }
 
     /**
@@ -226,7 +270,12 @@ public class CrUDUtils {
     private static void addToInfoList(String fileName) throws IOException {
         ArrayList<String> buffList = new ArrayList<>();
         int id = 1;
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(
+                Objects.requireNonNull(CrUDUtils.class
+                                                .getClassLoader()
+                                                .getResource(PROPS.getProperty("INFO_LIST")))
+                                                .getFile()
+        )) {
             String line;
             while ((line = reader.readLine()) != null)
                 if (!line.contains("ID") && !line.contains("Status"))
@@ -245,11 +294,15 @@ public class CrUDUtils {
             if (newID > id) id = newID;
         }
 
-        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(/*userDir + */PROPS.getProperty("INFO_LIST"), true)) {
+        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(
+                Objects.requireNonNull(CrUDUtils.class
+                                                .getClassLoader()
+                                                .getResource(PROPS.getProperty("INFO_LIST")))
+                                                .getFile(),
+                true)) {
             writer.newLine();
-            writer.write(String
-                    .format("|%-8d|%-15.15s|%-20.20s|%-9.9s|",
-                            ++id, fileName, PROPS.getProperty("USER_NAME"), "work file"));
+            writer.write(String.format("|%-8d|%-15.15s|%-20.20s|%-9.9s|",
+                                        ++id, fileName, PROPS.getProperty("USER_NAME"), "work file"));
         }
     }
 
@@ -263,7 +316,12 @@ public class CrUDUtils {
      */
     private static void changeFileStatus(String fileName, String status) throws IOException {
         ArrayList<String> buffList = new ArrayList<>();
-        try (CrUDBufferedReader reader = new CrUDBufferedReader(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
+        try (CrUDBufferedReader reader = new CrUDBufferedReader(
+                Objects.requireNonNull(CrUDUtils.class
+                                                .getClassLoader()
+                                                .getResource(PROPS.getProperty("INFO_LIST")))
+                                                .getFile()
+        )) {
             String line;
             while ((line = reader.readLine()) != null) buffList.add(line);
         }
@@ -281,7 +339,12 @@ public class CrUDUtils {
             }
         }
 
-        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(/*userDir + */PROPS.getProperty("INFO_LIST"))) {
+        try (CrUDBufferedWriter writer = new CrUDBufferedWriter(
+                Objects.requireNonNull(CrUDUtils.class
+                                                .getClassLoader()
+                                                .getResource(PROPS.getProperty("INFO_LIST")))
+                                                .getFile()
+        )) {
             for (int i = 0; i < buffList.size(); i++) {
                 if (i == buffList.size() - 1) writer.write(buffList.get(i));
                 else {
@@ -337,10 +400,12 @@ public class CrUDUtils {
      */
     private static void setPropsAndSave(String key, String value) throws IOException {
         PROPS.put(key, value);
-        PROPS.store(new BufferedWriter(
-                new OutputStreamWriter(
-                        new FileOutputStream(/*userDir +*/
-                                PROPS.getProperty("USER_PROPS_FILE")), StandardCharsets.UTF_8)), null);
+        PROPS.store(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
+                Objects.requireNonNull(CrUDUtils.class
+                                                .getClassLoader()
+                                                .getResource("props/user.properties"))
+                                                .getFile()
+        ), StandardCharsets.UTF_8)), null);
     }
 
     /**
@@ -349,9 +414,12 @@ public class CrUDUtils {
      */
     private static void changeDefaultMode() throws IOException {
         PROPS.put("MODE", "USER");
-        PROPS.store(new BufferedWriter(
-                new OutputStreamWriter(
-                        new FileOutputStream(defaultProps), StandardCharsets.UTF_8)), null);
+        PROPS.store(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
+                Objects.requireNonNull(CrUDUtils.class
+                                                .getClassLoader()
+                                                .getResource(DEFAULT_PROPS))
+                                                .getFile()
+        ), StandardCharsets.UTF_8)), null);
         PROPS.clear();
         loadProps();
     }

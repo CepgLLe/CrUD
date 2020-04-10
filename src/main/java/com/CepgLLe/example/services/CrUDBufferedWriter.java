@@ -1,23 +1,22 @@
-package services;
+package com.CepgLLe.example.services;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-public class CrUDBufferedWriter extends BufferedWriter {
+public class CrUDBufferedWriter implements Closeable {
 
     private BufferedWriter bw;
 
     public CrUDBufferedWriter(String name) throws IOException {
-        super(new OutputStreamWriter(new FileOutputStream(name), StandardCharsets.UTF_8));
         this.bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(name), StandardCharsets.UTF_8));
     }
 
     public CrUDBufferedWriter(String name, boolean append) throws IOException {
-        super(new OutputStreamWriter(new FileOutputStream(name, append), StandardCharsets.UTF_8));
         this.bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(name, append), StandardCharsets.UTF_8));
+    }
+
+    public void write(int c) throws IOException {
+        bw.write(c);
     }
 
     public void write(String str) throws IOException {
