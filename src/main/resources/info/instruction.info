@@ -6,3 +6,4 @@
        (for example: -u 3 new name of third product 320.5 100)
 [INFO] Run with "-d" and id of product that you want to delete.
        (for example: -d 15)
+[INFO] Run with "-print" for printing the selected work file.

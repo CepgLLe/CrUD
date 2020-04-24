@@ -33,7 +33,21 @@ public class CrUD {
             Extract extract = new Extract();
             if (!extract.extracted())
                 extract.extract();
-//            CrUDUtils.loadProps();
+            else
+                extract.loadProps();
+
+            if (extract.getDefaultProps().getProperty("MODE").equals("DEFAULT"))
+                CrUDUtils.putAllProps(extract.getDefaultProps());
+            else if (extract.getDefaultProps().getProperty("MODE").equals("USER"))
+                CrUDUtils.putAllProps(extract.getUserProps());
+
+            CrUDUtils.setAbsolutePathOfDefaultProps(extract.getFILES()
+                                                           .get("default.properties")
+                                                           .getAbsolutePath());
+            CrUDUtils.setAbsolutePathOfUserProps(extract.getFILES()
+                                                        .get("user.properties")
+                                                        .getAbsolutePath());
+
             System.out.println("[INFO] Run with \"-use\" if you don't know how it's work!");
             System.out.println("[INFO] Welcome! The program by Dmitrii Charuiskii");
         } catch (Exception ex) {
@@ -43,16 +57,20 @@ public class CrUD {
 
     public static void main(String[] args) {
          if (args.length > 0) {
-//             workFilePath = CrUDUtils.getWorkFile();
+             try {
+                 workFilePath = CrUDUtils.getWorkFile();
+             } catch (FileNotFoundException ex) {
+                 System.err.println("[ERROR] 1Message: " + ex.getMessage());
+             }
              switch (args[0]) {
                  case "-use":
                      try {
-                         if (args.length != 1) throw new IndexOutOfBoundsException(">>> Unknown command <<<");
+                         if (args.length != 1) throw new IndexOutOfBoundsException("Unknown command");
                          else CrUDUtils.getInstruction();
                      } catch (IndexOutOfBoundsException ex) {
-                         System.err.println(ex.getMessage());
+                         System.err.println("[ERROR] Message: " + ex.getMessage());
                      } catch (IOException ex) {
-                         System.err.println(">>> Unknown exception <<<");
+                         System.err.println("[ERROR] Unknown exception!!!");
                      }
                      break;
                  case "-stgs":
@@ -77,32 +95,32 @@ public class CrUD {
                                      CrUDUtils.deleteFile();
                                      break;
                              }
-                         else throw new IndexOutOfBoundsException(">>> Unknown command <<<");
+                         else throw new IndexOutOfBoundsException("Unknown command");
                      } catch (IOException ex) {
                          String message = ex.getMessage();
                          if (message.equals("exit")) return;
-                         else System.err.println(message);
+                         else System.err.println("[ERROR] Message: " + message);
                      }
                      break;
                  case "-cr":
                      try {
                          create(args);
                      } catch (IOException e) {
-                         System.err.println(">>> Error while create! <<< " + e.getMessage());
+                         System.err.println("[ERROR] Error while create! Message: " + e.getMessage());
                      }
                      break;
                  case "-u":
                      try {
                          update(args);
                      } catch (IOException e) {
-                         System.err.println(">>> Error while update! <<< " + e.getMessage());
+                         System.err.println("[ERROR] Error while update! Message: " + e.getMessage());
                      }
                      break;
                  case "-d":
                      try {
                          delete(args);
                      } catch (IOException e) {
-                         System.err.println(">>> Error while delete! <<< " + e.getMessage());
+                         System.err.println("[ERROR] Error while delete! Message: " + e.getMessage());
                      }
                      break;
                  case "-print":
@@ -111,7 +129,7 @@ public class CrUD {
                          while ((line = reader.readLine()) != null)
                              System.out.println(line);
                      } catch (IOException e) {
-                         System.err.println(">>> Error while print! <<< " + e.getMessage());
+                         System.err.println("[ERROR] Error while print! Message: " + e.getMessage());
                      }
                      break;
              }
