@@ -14,22 +14,33 @@ Columns of work file:
 `Let's use the generated JAR file:`
 
 ![put](for_readme/1.png "put to the directory you need")
+
 ---
+
 `First run:`
 
 ![first run](for_readme/first_run.png "first run with cmd")
+
 After first run we'll get a [INFO] message that files and properties created, which mode is active, ect.
+
 ---
+
 `Usual run:`
 
 ![usual run](for_readme/second_run.png "another runs")
+
 ---
+
 `How to use:`
 
 ![use](for_readme/use.png "when you run with '-use'")
+
 ---
+
 `Looks how you can work with data files:`
 
 ![stgs](for_readme/stgs.png "when you run with '-stgs'" )
+
 ---
+
 ####Let's try this...
