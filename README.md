@@ -21,7 +21,7 @@ Columns of work file:
 
 ![first run](for_readme/first_run.png "first run with cmd")
 
-After first run we'll get a [INFO] message that files and properties created, which mode is active, ect.
+After first run you'll get a [INFO] message that files and properties created, which mode is active, ect.
 
 ---
 
