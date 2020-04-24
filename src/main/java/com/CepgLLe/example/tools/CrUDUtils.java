@@ -51,14 +51,14 @@ public class CrUDUtils {
         int chosenNumber;
         try (CrUDBufferedReader consoleReader = new CrUDBufferedReader(System.in)) {
 
-            System.out.print("Choose the file (enter ID or \"0\" for cancel): ");
+            System.out.print("[REQUEST] Choose the file (enter ID or \"0\" for cancel): ");
             chosenNumber = Integer.parseInt(consoleReader.readLine());
 
             if (chosenNumber == 0) return;
 
             if (PROPS.getProperty("MODE").equals("DEFAULT"))
                 changeDefaultMode(); // Changes the DEFAULT MODE to USER MODE.
-            setPropsAndSave("USER_NAME", getData(consoleReader, "Enter your name (or \"exit\" to exit)"));
+            setPropsAndSave("USER_NAME", getData(consoleReader, "[REQUEST] Enter your name (or \"exit\" to exit)"));
 
             String workFileName = null;
             try (CrUDBufferedReader reader = new CrUDBufferedReader(PROPS.getProperty("INFO_LIST_PATH"))) {
@@ -89,8 +89,8 @@ public class CrUDUtils {
      */
     public static void createNewDataFile() throws IOException {
         try (CrUDBufferedReader reader = new CrUDBufferedReader(System.in)) {
-            String fileName = getData(reader, "Enter file name (name only & 10 characters max)") + ".crud";
-            String absolutePath = PROPS.getProperty("DATA_DIR") + fileName;
+            String fileName = getData(reader, "[REQUEST] Enter file name (name only & 10 characters max)") + ".crud";
+            String absolutePath = PROPS.getProperty("DATA_DIR") + System.getProperty("file.separator") + fileName;
 
             if (fileName.equals(".crud") || fileName.length() > 10)
                 throw new IndexOutOfBoundsException("Enter the creating file name 10 characters max");
@@ -120,11 +120,11 @@ public class CrUDUtils {
      * @throws IOException if an error occurred.
      */
     private static void create(CrUDBufferedReader reader, String absolutePath) throws IOException {
-        String fileName = absolutePath.substring(absolutePath.lastIndexOf('/') + 1);
-        if (isTrue(reader, "Confirm \"" + fileName + "\" file creation?")) {
+        String fileName = absolutePath.substring(absolutePath.lastIndexOf('\\') + 1);
+        if (isTrue(reader, "[REQUEST] Confirm \"" + fileName + "\" file creation?")) {
             File file = new File(absolutePath);
             if (file.createNewFile()) {
-                System.out.println(fileName + " created!");
+                System.out.println("[INFO] " + fileName + " created!");
                 addToInfoList(fileName);
             } else throw new IOException("Something is wrong while creating!");
         }
@@ -141,7 +141,7 @@ public class CrUDUtils {
         int chosenNumber;
         try (CrUDBufferedReader consoleReader = new CrUDBufferedReader(System.in)) {
 
-            System.out.print("Choose the file (enter ID or \"0\" for cancel): ");
+            System.out.print("[REQUEST] Choose the file (enter ID or \"0\" for cancel): ");
             chosenNumber = Integer.parseInt(consoleReader.readLine());
 
             if (chosenNumber == 0) return;
@@ -149,7 +149,7 @@ public class CrUDUtils {
 
             if (PROPS.getProperty("MODE").equals("DEFAULT"))
                 changeDefaultMode(); // Changes the DEFAULT MODE to USER MODE.
-            setPropsAndSave("USER_NAME", getData(consoleReader, "Enter your name (or \"exit\" to exit)"));
+            setPropsAndSave("USER_NAME", getData(consoleReader, "[REQUEST] Enter your name (or \"exit\" to exit)"));
 
             try (CrUDBufferedReader reader = new CrUDBufferedReader(PROPS.getProperty("INFO_LIST_PATH"))) {
                 String line;
@@ -181,7 +181,9 @@ public class CrUDUtils {
             String line = reader.readLine();
             if (line.equalsIgnoreCase("N")) break;
             else if (line.equalsIgnoreCase("Y")) {
-                File file = new File(PROPS.getProperty("DATA_DIR") + fileName);
+                File file = new File(PROPS.getProperty("DATA_DIR") +
+                                     System.getProperty("file.separator") +
+                                     fileName);
                 if (file.delete()) {
                     System.out.println(fileName + " deleted!");
                     changeFileStatus(fileName, "deleted");
